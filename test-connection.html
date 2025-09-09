@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Database Connection</title>
+</head>
+<body>
+    <h1>Test Database Connection</h1>
+    <button onclick="testSave()">Test Save User</button>
+    <button onclick="testGet()">Test Get Users</button>
+    <div id="result"></div>
+
+    <script>
+        async function testSave() {
+            try {
+                const response = await fetch('http://localhost:3001/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uid: 'test_' + Date.now(),
+                        email: 'test@example.com',
+                        displayName: 'Test User'
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 'Save Result: ' + JSON.stringify(data);
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Save Error: ' + error.message;
+            }
+        }
+
+        async function testGet() {
+            try {
+                const response = await fetch('http://localhost:3001/api/users/all');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 'Users: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Get Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

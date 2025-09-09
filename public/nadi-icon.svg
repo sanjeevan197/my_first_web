@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="nadiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Hand outline -->
+  <path d="M30 20 Q35 15 40 20 L45 25 Q50 20 55 25 L60 30 Q65 25 70 30 L75 40 Q80 45 75 50 L70 60 Q65 65 60 60 L50 70 Q40 75 30 70 L20 60 Q15 50 20 40 Z" 
+        fill="url(#nadiGradient)" stroke="#333" stroke-width="2"/>
+  
+  <!-- Pulse lines -->
+  <path d="M25 45 Q30 40 35 45 Q40 50 45 45 Q50 40 55 45 Q60 50 65 45 Q70 40 75 45" 
+        fill="none" stroke="white" stroke-width="2"/>
+  
+  <!-- Dots for pulse points -->
+  <circle cx="35" cy="45" r="2" fill="white"/>
+  <circle cx="50" cy="45" r="2" fill="white"/>
+  <circle cx="65" cy="45" r="2" fill="white"/>
+</svg>
