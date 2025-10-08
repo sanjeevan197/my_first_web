@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test REST API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { margin: 5px; padding: 10px; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>REST API Test</h1>
+    
+    <div>
+        <button onclick="testHealth()">Health Check</button>
+        <button onclick="testGetUsers()">Get All Users</button>
+        <button onclick="testCreateUser()">Create Test User</button>
+        <button onclick="testUpdateUser()">Update User</button>
+        <button onclick="testDeleteUser()">Delete User</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        
+        function showResult(data, isError = false) {
+            const result = document.getElementById('result');
+            result.className = `result ${isError ? 'error' : 'success'}`;
+            result.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function testGetUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function testCreateUser() {
+            try {
+                const userData = {
+                    id: 'test_' + Date.now(),
+                    email: 'test@example.com',
+                    display_name: 'Test User',
+                    phone: '+1234567890',
+                    age: 25,
+                    address: 'Test Address'
+                };
+                
+                const response = await fetch(`${API_BASE}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function testUpdateUser() {
+            try {
+                // First get a user
+                const usersResponse = await fetch(`${API_BASE}/users`);
+                const usersData = await usersResponse.json();
+                
+                if (usersData.data && usersData.data.length > 0) {
+                    const userId = usersData.data[0].id;
+                    
+                    const updateData = {
+                        display_name: 'Updated Name',
+                        phone: '+9876543210'
+                    };
+                    
+                    const response = await fetch(`${API_BASE}/users/${userId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    const data = await response.json();
+                    showResult(data);
+                } else {
+                    showResult({ error: 'No users found to update' }, true);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+        
+        async function testDeleteUser() {
+            try {
+                // First get a user
+                const usersResponse = await fetch(`${API_BASE}/users`);
+                const usersData = await usersResponse.json();
+                
+                if (usersData.data && usersData.data.length > 0) {
+                    const userId = usersData.data[0].id;
+                    
+                    const response = await fetch(`${API_BASE}/users/${userId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    showResult(data);
+                } else {
+                    showResult({ error: 'No users found to delete' }, true);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -13,12 +13,17 @@ export const useNotifications = () => {
   const addNotification = useCallback((
     type: 'success' | 'error' | 'warning',
     message: string,
-    duration: number = 5000
+    duration: number = 3000
   ) => {
     const id = Date.now().toString();
     const notification: Notification = { id, type, message, duration };
     
-    setNotifications(prev => [...prev, notification]);
+    // Prevent duplicate notifications
+    setNotifications(prev => {
+      const exists = prev.some(n => n.message === message && n.type === type);
+      if (exists) return prev;
+      return [...prev, notification];
+    });
   }, []);
 
   const removeNotification = useCallback((id: string) => {

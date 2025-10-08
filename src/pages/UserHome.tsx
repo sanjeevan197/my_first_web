@@ -36,8 +36,14 @@ export const UserHome: React.FC<UserHomeProps> = ({ user, notifications }) => {
     };
     
     loadUserStats();
-    notifications.success(`Welcome back, ${user.displayName || 'User'}!`);
-  }, [user, notifications]);
+    
+    // Show welcome message only once
+    const hasShownWelcome = sessionStorage.getItem('welcomeShown');
+    if (!hasShownWelcome) {
+      notifications.success(`Welcome back, ${user.displayName || 'User'}!`);
+      sessionStorage.setItem('welcomeShown', 'true');
+    }
+  }, [user.uid]); // Remove notifications from dependency array
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-green-50 p-6">
       <div className="max-w-6xl mx-auto">

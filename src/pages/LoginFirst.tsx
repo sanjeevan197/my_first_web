@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
-import { nadiAPI } from '../services/api';
+import { perfectAuthAPI } from '../services/authAPI';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
@@ -9,41 +9,59 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 export const LoginFirst: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let userCredential;
       
-      await nadiAPI.saveUser({
+      if (isSignUp) {
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      }
+      
+      await perfectAuthAPI.syncUser({
         uid: userCredential.user.uid,
         email: userCredential.user.email || '',
-        displayName: userCredential.user.displayName || ''
+        displayName: displayName || userCredential.user.displayName || '',
+        emailVerified: userCredential.user.emailVerified,
+        provider: 'email'
       });
       
     } catch (error: any) {
-      setError('Invalid email or password');
+      setError(error.message || 'Authentication failed');
     }
     setLoading(false);
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleAuth = async () => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
       
-      await nadiAPI.saveUser({
+      await perfectAuthAPI.syncUser({
         uid: userCredential.user.uid,
         email: userCredential.user.email || '',
-        displayName: userCredential.user.displayName || ''
+        displayName: userCredential.user.displayName || '',
+        emailVerified: userCredential.user.emailVerified,
+        provider: 'google'
       });
       
     } catch (error: any) {
-      setError('Google login failed');
+      setError('Google authentication failed');
     }
   };
 
@@ -69,7 +87,16 @@ export const LoginFirst: React.FC = () => {
               </div>
             )}
             
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-4">
+              {isSignUp && (
+                <Input
+                  type="text"
+                  placeholder="Full Name (Optional)"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              )}
+              
               <Input
                 type="email"
                 placeholder="Email Address"
@@ -77,6 +104,7 @@ export const LoginFirst: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
+              
               <Input
                 type="password"
                 placeholder="Password"
@@ -84,20 +112,47 @@ export const LoginFirst: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              
+              {isSignUp && (
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              )}
+              
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? 
+                  (isSignUp ? 'Creating Account...' : 'Signing In...') : 
+                  (isSignUp ? 'Create Account' : 'Sign In')
+                }
               </Button>
             </form>
             
             <div className="mt-4">
-              <Button onClick={handleGoogleLogin} variant="outline" className="w-full">
+              <Button onClick={handleGoogleAuth} variant="outline" className="w-full">
                 Continue with Google
               </Button>
             </div>
             
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account? Contact administrator
+            <div className="mt-6 text-center space-y-2">
+              <p className="text-sm">
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setError('');
+                  }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {isSignUp ? 'Sign In' : 'Sign Up'}
+                </button>
+              </p>
+              
+              <p className="text-xs text-gray-500">
+                🔒 Firebase + Database Sync
               </p>
             </div>
           </CardContent>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { updateProfile } from 'firebase/auth';
 import { User as FirebaseUser } from 'firebase/auth';
-import { nadiAPI } from '../services/api';
+import { nadiRestAPI } from '../services/restAPI';
 import { useRealTime } from '../hooks/useRealTime';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -31,17 +31,22 @@ export const Profile: React.FC<ProfileProps> = ({ user, notifications }) => {
     // Load profile data from API
     const loadProfile = async () => {
       try {
-        const response = await nadiAPI.getProfile(user.uid);
-        if (response.data.profile) {
-          const profile = response.data.profile;
+        const response = await nadiRestAPI.getUser(user.uid);
+        console.log('Profile response:', response);
+        if (response.success && response.data) {
+          const profile = response.data;
           setPhone(profile.phone || '');
-          setAge(profile.age || '');
+          setAge(profile.age?.toString() || '');
           setAddress(profile.address || '');
           if (profile.display_name) {
             setDisplayName(profile.display_name);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Failed to load profile:', error);
+        if (error.message?.includes('No response from server')) {
+          setMessage('❌ Server not available. Please start the backend server.');
+        }
         // Fallback to localStorage
         const savedProfile = localStorage.getItem(`profile_${user.uid}`);
         if (savedProfile) {
@@ -89,12 +94,14 @@ export const Profile: React.FC<ProfileProps> = ({ user, notifications }) => {
       }
 
       // Save to database
-      const response = await nadiAPI.updateProfile(user.uid, {
-        displayName: displayName.trim(),
+      const response = await nadiRestAPI.updateUser(user.uid, {
+        display_name: displayName.trim(),
         phone: phone.trim(),
         age: age ? parseInt(age) : null,
         address: address.trim()
       });
+      
+      console.log('Update response:', response);
 
       // Save additional profile data to localStorage
       const profileData = {
